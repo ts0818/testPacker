@@ -1,0 +1,72 @@
+{
+  "variables": {
+      "vm_name": "packer-cent-8.1-x86_64",
+      "iso_urls_0": "http://ftp.riken.jp/Linux/centos/8.1.1911/isos/x86_64/CentOS-8.1.1911-x86_64-dvd1.iso",
+      "iso_urls_1": "http://ftp.jaist.ac.jp/pub/Linux/CentOS/8.1.1911/isos/x86_64/CentOS-8.1.1911-x86_64-dvd1.iso",
+      "iso_urls_2": "http://ftp.tsukuba.wide.ad.jp/Linux/centos/8.1.1911/isos/x86_64/CentOS-8.1.1911-x86_64-dvd1.iso",      
+      "iso_checksum": "3ee3f4ea1538e026fff763e2b284a6f20b259d91d1ad5688f5783a67d279423b",
+      "iso_checksum_type": "sha256"
+  },
+  "builders": [
+    {
+      "type": "virtualbox-iso",
+      "vboxmanage": [
+        ["modifyvm", "{{.Name}}", "--memory", "2048"],
+        ["modifyvm", "{{.Name}}", "--cpus", "2"],
+        ["modifyvm", "{{.Name}}", "--nic2", "hostonly"],
+        ["modifyvm", "{{.Name}}", "--hostonlyadapter2", "VirtualBox Host-Only Ethernet Adapter"]
+      ],
+      "http_directory": "../centos8/http",
+      "iso_urls":[
+          "{{user `iso_urls_0`}}",
+          "{{user `iso_urls_1`}}",          
+          "{{user `iso_urls_2`}}"
+      ],
+      "iso_checksum": "{{user `iso_checksum`}}",
+      "iso_checksum_type": "{{user `iso_checksum_type`}}",
+      "boot_wait": "10s",
+      "boot_command": [
+          "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg<enter><wait>"
+      ],
+      "disk_size": 51200,
+      "guest_os_type": "RedHat_64",
+      "ssh_host": "127.0.0.1",
+      "ssh_port": 22,
+      "ssh_username": "vagrant",
+      "ssh_password": "vagrant",
+      "guest_additions_path": "VBoxGuestAdditions_{{.Version}}.iso",
+      "virtualbox_version_file": ".vbox_version",
+      "vm_name": "{{user `vm_name`}}",
+      "ssh_wait_timeout": "10000s",
+      "shutdown_command": "echo 'vagrant' | sudo -S shutdown -P now"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "execute_command" : "echo 'vagrant' | {{ .Vars }} sudo -E -S sh '{{ .Path }}'",
+      "override": {
+        "virtualbox-iso": {
+          "scripts": [
+            "../centos8/provisioners/virtualbox.sh",
+            "../centos8/provisioners/cleanup.sh"
+          ]
+        }
+      }
+    }
+  ],
+  "error-cleanup-provisioner": {
+    "type": "shell-local",
+    "inline": ["echo 'rubber ducky'> ducky.txt"]
+  },
+  "post-processors": [
+    {
+      "type": "vagrant",
+      "override": {
+        "virtualbox": {
+          "output": "../centos8/box/vbox-rhel-8.1-x86_64.box"
+        }
+      }
+    }
+  ]
+}
