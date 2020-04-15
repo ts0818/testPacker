@@ -1,2 +1,2 @@
 # testPacker
-Packer build VM that guestOS is CentOS 8.1 
+Packer build three Virtual Machines that guestOS is CentOS 8.1.
